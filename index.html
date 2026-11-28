@@ -207,6 +207,45 @@ footer{padding-bottom:calc(110px + env(safe-area-inset-bottom,0px))}
 [data-skin="moments"] header{background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
 [data-skin="moments"] .ch .i{color:var(--acc)}
 @media (prefers-reduced-motion:reduce){[data-skin="moments"] .hero::before{animation:none}}
+
+/* ===== UI Moments : animations (d'après les contrôles originaux de UI Moments, MIT © guanmo-ai) ===== */
+:root[data-skin="moments"]{--um-spring:cubic-bezier(.3,1.45,.5,1);--um-ease:cubic-bezier(.16,1,.3,1)}
+/* Odometer : chiffres qui roulent */
+.um-od{display:inline-block;height:1.15em;line-height:1.15em;overflow:hidden;vertical-align:bottom}
+.um-odc{display:flex;flex-direction:column;transition:transform .9s var(--um-spring,cubic-bezier(.3,1.45,.5,1))}
+.um-odc>i{font-style:normal;height:1.15em;line-height:1.15em;text-align:center}
+/* Ripple : ondes au toucher */
+[data-skin="moments"] :is(.btn,.chip,.tab,.ck,.icon-btn){position:relative;overflow:hidden;isolation:isolate}
+.um-rip{position:absolute;width:12px;height:12px;margin:-6px 0 0 -6px;border-radius:50%;pointer-events:none;z-index:-1;border:1.5px solid currentColor;opacity:.55;animation:umRip .75s var(--um-ease,ease-out) forwards}
+.um-rip.f{background:currentColor;border:0;opacity:.18}
+@keyframes umRip{to{transform:scale(var(--s,14));opacity:0}}
+/* Tide : barres qui se remplissent comme une marée */
+[data-skin="moments"] .bar{position:relative}
+[data-skin="moments"] .bar>i,[data-skin="moments"] .bar i{position:relative;overflow:hidden;transform-origin:left center;animation:umTide 1s var(--um-spring) both}
+[dir="rtl"][data-skin="moments"] .bar i{transform-origin:right center}
+[data-skin="moments"] .bar i::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,.45) 50%,transparent 100%);transform:translateX(-100%);animation:umFlow 2.8s ease-in-out 1s infinite}
+@keyframes umTide{from{transform:scaleX(0)}}
+@keyframes umFlow{60%,100%{transform:translateX(100%)}}
+/* Stroke Checklist : la coche se dessine */
+[data-skin="moments"] tr.done .ck{animation:umPop .45s var(--um-spring)}
+[data-skin="moments"] tr.done .ck svg *{stroke-dasharray:40;stroke-dashoffset:0;animation:umDraw .4s var(--um-ease) .05s both}
+[data-skin="moments"] tr.done input{transition:background .3s,border-color .3s}
+@keyframes umDraw{from{stroke-dashoffset:40}}
+@keyframes umPop{0%{transform:scale(.8)}100%{transform:scale(1)}}
+/* Breath Orb : minuteur de repos qui respire (4 s inspiration, 4 s expiration) */
+[data-skin="moments"] .timer .box{background:var(--surface2);color:var(--ink);box-shadow:var(--um-lit);border:0}
+[data-skin="moments"] .timer .box button{color:var(--ink);border-color:var(--line)}
+[data-skin="moments"] .timer .box::before{content:"";flex:none;width:26px;height:26px;margin-inline-end:4px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff,var(--accent) 70%);animation:umBreath 8s ease-in-out infinite,umRing 8s ease-in-out .35s infinite}
+@keyframes umBreath{0%,100%{transform:scale(.72)}50%{transform:scale(1)}}
+@keyframes umRing{0%,100%{box-shadow:0 0 0 0 var(--accent-soft,rgba(232,166,244,.16)),0 0 8px rgba(232,166,244,.3)}50%{box-shadow:0 0 0 7px var(--accent-soft,rgba(232,166,244,.16)),0 0 22px rgba(232,166,244,.55)}}
+/* Toast : apparition à ressort */
+[data-skin="moments"] :is(#toast,.toast){background:var(--surface2,var(--um-raised));color:var(--ink);box-shadow:var(--um-lit)}
+[data-skin="moments"] #toast{transition:opacity .2s,transform .5s var(--um-spring)}
+[data-skin="moments"] #toast.on{transform:translate(-50%,0) scale(1)}
+[data-skin="moments"] #toast:not(.on){transform:translate(-50%,24px) scale(.9)}
+[data-skin="moments"] .toast.on{animation:umDrop .5s var(--um-spring)}
+@keyframes umDrop{from{transform:translate(-50%,-14px) scale(.92)}to{transform:translateX(-50%)}}
+@media (prefers-reduced-motion:reduce){[data-skin="moments"] *{animation:none!important}.um-odc{transition:none!important}}
 </style>
 </head>
 <body>
@@ -534,6 +573,25 @@ function lockChk(){if(pinOn()){$('#lk').hidden=false;$('#lp').value='';$('#le').
 $('#lu').onclick=async()=>{let p=null;try{p=localStorage.getItem('mzp')}catch(_){}if(!p){$('#lk').hidden=true;return}const[s,h]=p.split(':');if(await sha(s+$('#lp').value)===h)$('#lk').hidden=true;else $('#le').textContent=T('Code incorrect.','الرمز غير صحيح.')};
 let hid=0;document.addEventListener('visibilitychange',()=>{if(document.hidden)hid=Date.now();else if(hid&&Date.now()-hid>30000)lockChk()});lockChk();
 (async()=>{try{if(typeof claude==='undefined')return;const[u,d]=await Promise.all([claude.use('user'),claude.use('db')]);if(!u||!d)return;const id=await u.id();DBR=d.collection('data/users/'+id).doc('mizane');DBR.onSnapshot(s=>{const was=SY;SY=1;if(!s.exists){push();if(!was)render();return}const r=s.data();if(r.t>(S.t||0)){try{const o=JSON.parse(r.j);if(valid(o)){S=o;localStorage.setItem(K,r.j)}}catch(_){}render()}else if(r.t<(S.t||0)){push();if(!was)render()}else if(!was)render()},()=>{SY=0;render()})}catch(_){}})();
+</script>
+<script>
+/* UI Moments : odometer + ripple (d'après les contrôles originaux de UI Moments, MIT © guanmo-ai) */
+(()=>{const R=document.documentElement,on=()=>R.dataset.skin==='moments',still=()=>matchMedia('(prefers-reduced-motion: reduce)').matches,prev=new Map(),SEL='main .big, main .kp b';
+function odo(el,key){const txt=(el.dataset.count!==undefined&&el.textContent.trim()==='')?el.dataset.count:el.textContent;if(el.querySelector('.um-od')||!/[0-9]/.test(txt))return;
+ const old=prev.get(key);prev.set(key,txt);const nd=(txt.match(/[0-9]/g)||[]),od=old?(old.match(/[0-9]/g)||[]):[];
+ while(od.length<nd.length)od.unshift('0');while(od.length>nd.length)od.shift();
+ el.setAttribute('aria-label',txt.trim());el.textContent='';let k=0;const cols=[];
+ for(const ch of txt){if(/[0-9]/.test(ch)){const w=document.createElement('span');w.className='um-od';w.setAttribute('aria-hidden','true');const c=document.createElement('span');c.className='um-odc';c.innerHTML='<i>0</i><i>1</i><i>2</i><i>3</i><i>4</i><i>5</i><i>6</i><i>7</i><i>8</i><i>9</i>';
+   const from=still()?+ch:+od[k];c.style.transition='none';c.style.transform='translateY('+(-1.15*from)+'em)';w.appendChild(c);el.appendChild(w);cols.push([c,+ch,nd.length-1-k]);k++}
+  else{const s=document.createElement('span');s.setAttribute('aria-hidden','true');s.textContent=ch;el.appendChild(s)}}
+ requestAnimationFrame(()=>requestAnimationFrame(()=>cols.forEach(([c,d,i])=>{c.style.transition='';c.style.transitionDelay=(i*45)+'ms';c.style.transform='translateY('+(-1.15*d)+'em)'})))}
+window.umOdo=odo;let q=0;
+function scan(){q=0;if(!on())return;document.querySelectorAll(SEL).forEach((el,i)=>odo(el,(el.className||el.tagName)+i))}
+new MutationObserver(()=>{if(!q)q=requestAnimationFrame(scan)}).observe(document.body,{childList:true,subtree:true});
+new MutationObserver(scan).observe(R,{attributes:true,attributeFilter:['data-skin']});
+document.addEventListener('pointerdown',e=>{if(!on()||still())return;const b=e.target.closest('.btn,.chip,.tab,.ck,.icon-btn');if(!b)return;const r=b.getBoundingClientRect(),s=Math.max(r.width,r.height)/6;
+ [0,110].forEach((d,j)=>setTimeout(()=>{const p=document.createElement('span');p.className='um-rip'+(j?'':' f');p.style.left=(e.clientX-r.left)+'px';p.style.top=(e.clientY-r.top)+'px';p.style.setProperty('--s',s);b.appendChild(p);setTimeout(()=>p.remove(),800)},d))},{passive:true});
+requestAnimationFrame(scan)})();
 </script>
 </body>
 </html>
